@@ -14,181 +14,245 @@ export interface ReportData {
 }
 
 export const generatePDF = (data: ReportData, type: 'sgpa' | 'cgpa'): void => {
+  console.log("Starting PDF generation process");
+  
   // Create the report content
   const html = generateReportHTML(data, type);
   
-  // Create a dedicated container for the PDF
+  // Create wrapper div that will be invisible but present in DOM
   const container = document.createElement('div');
-  container.style.width = '210mm';
-  container.style.backgroundColor = '#111';
-  container.style.position = 'absolute';
+  container.id = 'pdf-container-hidden';
+  container.style.position = 'fixed';
   container.style.top = '-9999px';
   container.style.left = '-9999px';
-  container.innerHTML = html;
+  container.style.height = '297mm';  // A4 height
+  container.style.width = '210mm';   // A4 width
+  container.style.padding = '0';
+  container.style.backgroundColor = '#111'; // Ensure background color
+  container.style.overflow = 'hidden';
+  container.style.zIndex = '-1000';
+  container.style.visibility = 'hidden';
   
-  // Append to document body to render it
+  // Add container to body
   document.body.appendChild(container);
   
-  // Configure html2pdf options
-  const opt = {
-    margin: 10,
-    filename: `${data.studentName}_${type === 'sgpa' ? 'SGPA' : 'CGPA'}_Report.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { 
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      backgroundColor: '#111'
-    },
-    jsPDF: { 
-      unit: 'mm', 
-      format: 'a4', 
-      orientation: 'portrait' 
-    }
-  };
+  // Set inner HTML after appending to body
+  container.innerHTML = html;
+  
+  console.log("Container added to document, starting rendering");
 
-  // Use a generous timeout to ensure the container is fully rendered
+  // Force a browser repaint for container elements
   setTimeout(() => {
-    // Generate PDF
-    html2pdf().from(container).set(opt).save().then(() => {
-      console.log('PDF generation completed successfully');
-      // Clean up
-      if (document.body.contains(container)) {
-        document.body.removeChild(container);
-      }
-    }).catch(error => {
-      console.error('PDF generation error:', error);
-      // Clean up even on error
-      if (document.body.contains(container)) {
-        document.body.removeChild(container);
-      }
-    });
-  }, 1000);
+    console.log("Creating PDF from content");
+    
+    // Configure html2pdf options with increased scale for better quality
+    const opt = {
+      margin: 10,
+      filename: `${data.studentName}_${type === 'sgpa' ? 'SGPA' : 'CGPA'}_Report.pdf`,
+      image: { type: 'jpeg', quality: 1.0 },
+      html2canvas: { 
+        scale: 2,
+        useCORS: true,
+        logging: true,
+        backgroundColor: '#111',
+        // Important: Explicitly set bounds to the container
+        windowWidth: 210 * 2.83, // Convert mm to px at 96dpi (210mm ≈ 794px)
+        windowHeight: 297 * 2.83, // Convert mm to px at 96dpi (297mm ≈ 1123px)
+      },
+      jsPDF: { 
+        unit: 'mm', 
+        format: 'a4', 
+        orientation: 'portrait',
+        compress: false,
+        precision: 16
+      },
+      pagebreak: { mode: 'avoid-all' }
+    };
+
+    // Generate PDF with explicit promise handling
+    html2pdf()
+      .from(container)
+      .set(opt)
+      .outputPdf('dataurlstring')
+      .then((pdfDataUri) => {
+        console.log("PDF data URI generated successfully, length: ", pdfDataUri.length);
+        
+        // Create a blob from the data URI
+        const byteString = atob(pdfDataUri.split(',')[1]);
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        
+        for (let i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+        }
+        
+        const blob = new Blob([ab], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        
+        // Create a download link and trigger it
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${data.studentName}_${type === 'sgpa' ? 'SGPA' : 'CGPA'}_Report.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        
+        // Clean up
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+          document.body.removeChild(link);
+          if (document.body.contains(container)) {
+            document.body.removeChild(container);
+          }
+          console.log("PDF generation completed successfully");
+        }, 100);
+      })
+      .catch(error => {
+        console.error("PDF generation error:", error);
+        // Clean up even on error
+        if (document.body.contains(container)) {
+          document.body.removeChild(container);
+        }
+      });
+  }, 2000); // Increased timeout to ensure rendering completes
 };
 
 const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => {
-  // Base styles
+  // Base styles - with !important to override any conflicting styles
   const styles = `
     * {
-      box-sizing: border-box;
-      font-family: 'Arial', sans-serif;
+      box-sizing: border-box !important;
+      font-family: 'Arial', sans-serif !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
     }
     body {
-      margin: 0;
-      padding: 0;
-      background-color: #111;
-      color: #fff;
+      margin: 0 !important;
+      padding: 0 !important;
+      background-color: #111 !important;
+      color: #fff !important;
+      font-size: 12px !important;
+      line-height: 1.5 !important;
     }
     .container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 40px;
-      background-color: #111;
+      width: 190mm !important;
+      margin: 0 auto !important;
+      padding: 15mm !important;
+      background-color: #111 !important;
     }
     .header {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 30px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex !important;
+      justify-content: space-between !important;
+      margin-bottom: 30px !important;
+      padding-bottom: 20px !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
     .title {
-      font-size: 24px;
-      font-weight: 700;
-      margin: 0;
+      font-size: 24px !important;
+      font-weight: 700 !important;
+      margin: 0 !important;
     }
     .subtitle {
-      font-size: 12px;
-      color: #999;
-      margin: 0;
+      font-size: 12px !important;
+      color: #999 !important;
+      margin: 0 !important;
     }
     .info-card {
-      background: rgba(255, 255, 255, 0.05);
-      padding: 20px;
-      border-radius: 8px;
-      margin-bottom: 25px;
+      background: rgba(30, 30, 30, 0.9) !important;
+      padding: 20px !important;
+      border-radius: 8px !important;
+      margin-bottom: 25px !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
     .info-title {
-      margin-top: 0;
-      margin-bottom: 15px;
-      font-size: 18px;
-      color: #C084FC;
+      margin-top: 0 !important;
+      margin-bottom: 15px !important;
+      font-size: 18px !important;
+      color: #C084FC !important;
     }
     .info-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 15px !important;
     }
     .info-item {
-      margin: 8px 0;
-      font-size: 14px;
+      margin: 8px 0 !important;
+      font-size: 14px !important;
     }
     .info-label {
-      color: #999;
+      color: #999 !important;
     }
     .info-value {
-      font-weight: 500;
+      font-weight: 500 !important;
     }
     table {
-      width: 100%;
-      border-collapse: collapse;
+      width: 100% !important;
+      border-collapse: collapse !important;
+      margin: 15px 0 !important;
     }
     th {
-      padding: 10px;
-      text-align: left;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      background: rgba(0, 0, 0, 0.2);
+      padding: 10px !important;
+      text-align: left !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+      background: rgba(0, 0, 0, 0.2) !important;
+      color: #fff !important;
+      font-weight: 600 !important;
     }
     td {
-      padding: 10px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 10px !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+      color: #fff !important;
     }
     tr:nth-child(even) {
-      background: rgba(0, 0, 0, 0.1);
+      background: rgba(0, 0, 0, 0.1) !important;
     }
     .grade-badge {
-      display: inline-block;
-      padding: 5px 10px;
-      color: #000;
-      font-weight: 600;
-      border-radius: 4px;
-      font-size: 12px;
+      display: inline-block !important;
+      padding: 5px 10px !important;
+      color: #000 !important;
+      font-weight: 600 !important;
+      border-radius: 4px !important;
+      font-size: 12px !important;
+      text-align: center !important;
     }
     .result-box {
-      background: linear-gradient(135deg, #9b87f5, #0EA5E9);
-      padding: 15px 60px;
-      border-radius: 100px;
-      text-align: center;
-      margin: 30px auto;
-      width: fit-content;
+      background: linear-gradient(135deg, #9b87f5, #0EA5E9) !important;
+      padding: 15px 60px !important;
+      border-radius: 100px !important;
+      text-align: center !important;
+      margin: 30px auto !important;
+      width: fit-content !important;
     }
     .result-label {
-      margin: 0;
-      font-size: 16px;
-      color: #fff;
-      font-weight: 500;
+      margin: 0 !important;
+      font-size: 16px !important;
+      color: #fff !important;
+      font-weight: 500 !important;
     }
     .result-value {
-      margin: 10px 0 0;
-      font-size: 48px;
-      color: #fff;
-      font-weight: 700;
+      margin: 10px 0 0 !important;
+      font-size: 48px !important;
+      color: #fff !important;
+      font-weight: 700 !important;
     }
     .footer {
-      padding-top: 20px;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-      text-align: center;
-      font-size: 12px;
-      color: #999;
-      margin-top: 40px;
+      padding-top: 20px !important;
+      border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+      text-align: center !important;
+      font-size: 12px !important;
+      color: #999 !important;
+      margin-top: 40px !important;
     }
   `;
 
-  // Start building the HTML
+  // Start building the HTML as a complete standalone document
   let html = `
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${data.studentName} - ${type === 'sgpa' ? 'SGPA' : 'CGPA'} Report</title>
       <style>${styles}</style>
     </head>
     <body>
@@ -196,14 +260,14 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
         <div class="header">
           <div>
             <h1 class="title">
-              <span style="color: #C084FC;">KIIT</span>
-              <span style="color: #67E8F9;">-CONNECT</span>
+              <span style="color: #C084FC !important;">KIIT</span>
+              <span style="color: #67E8F9 !important;">-CONNECT</span>
             </h1>
             <p class="subtitle">Academic Performance Report</p>
           </div>
           <div style="text-align: right;">
             <p class="info-item">Generated on: ${new Date().toLocaleDateString()}</p>
-            <p class="info-item" style="color: #C084FC;">${type === 'sgpa' ? 'SGPA' : 'CGPA'} Report</p>
+            <p class="info-item" style="color: #C084FC !important;">${type === 'sgpa' ? 'SGPA' : 'CGPA'} Report</p>
           </div>
         </div>
         
@@ -243,9 +307,9 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
           <thead>
             <tr>
               <th>Subject</th>
-              <th style="text-align: center;">Credits</th>
-              <th style="text-align: center;">Grade</th>
-              <th style="text-align: center;">Grade Points</th>
+              <th style="text-align: center !important;">Credits</th>
+              <th style="text-align: center !important;">Grade</th>
+              <th style="text-align: center !important;">Grade Points</th>
             </tr>
           </thead>
           <tbody>
@@ -266,13 +330,13 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
       html += `
         <tr>
           <td>${subject.name}</td>
-          <td style="text-align: center;">${subject.credit}</td>
-          <td style="text-align: center;">
-            <span class="grade-badge" style="background-color: ${gradeColor};">
+          <td style="text-align: center !important;">${subject.credit}</td>
+          <td style="text-align: center !important;">
+            <span class="grade-badge" style="background-color: ${gradeColor} !important;">
               ${subject.grade}
             </span>
           </td>
-          <td style="text-align: center;">${gradePoint}</td>
+          <td style="text-align: center !important;">${gradePoint}</td>
         </tr>
       `;
     });
@@ -297,8 +361,8 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
           <thead>
             <tr>
               <th>Semester</th>
-              <th style="text-align: center;">Credits</th>
-              <th style="text-align: center;">SGPA</th>
+              <th style="text-align: center !important;">Credits</th>
+              <th style="text-align: center !important;">SGPA</th>
             </tr>
           </thead>
           <tbody>
@@ -315,9 +379,9 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
       html += `
         <tr>
           <td>${semester.name}</td>
-          <td style="text-align: center;">${semester.credits}</td>
-          <td style="text-align: center;">
-            <span class="grade-badge" style="background-color: ${sgpaColor};">
+          <td style="text-align: center !important;">${semester.credits}</td>
+          <td style="text-align: center !important;">
+            <span class="grade-badge" style="background-color: ${sgpaColor} !important;">
               ${semester.sgpa.toFixed(2)}
             </span>
           </td>
@@ -335,11 +399,11 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
         <h2 class="result-value">${(data.cgpa || 0).toFixed(2)}</h2>
       </div>
       
-      <div style="margin: 30px auto; width: 80%;">
-        <div style="height: 10px; background: rgba(255, 255, 255, 0.1); border-radius: 5px; overflow: hidden;">
-          <div style="height: 100%; width: ${Math.min(100, (data.cgpa || 0) * 10)}%; background: linear-gradient(to right, #0EA5E9, #9b87f5);"></div>
+      <div style="margin: 30px auto !important; width: 80% !important;">
+        <div style="height: 10px !important; background: rgba(255, 255, 255, 0.1) !important; border-radius: 5px !important; overflow: hidden !important;">
+          <div style="height: 100% !important; width: ${Math.min(100, (data.cgpa || 0) * 10)}% !important; background: linear-gradient(to right, #0EA5E9, #9b87f5) !important;"></div>
         </div>
-        <div style="display: flex; justify-content: space-between; margin-top: 5px; font-size: 12px; color: #999;">
+        <div style="display: flex !important; justify-content: space-between !important; margin-top: 5px !important; font-size: 12px !important; color: #999 !important;">
           <span>0</span>
           <span>2.5</span>
           <span>5.0</span>
@@ -353,8 +417,8 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
   // Common footer
   html += `
         <div class="footer">
-          <p style="margin: 0;">This is an automatically generated report by KIIT-CONNECT.</p>
-          <p style="margin: 5px 0 0;">For official grades and transcripts, please contact the university examination department.</p>
+          <p style="margin: 0 !important;">This is an automatically generated report by KIIT-CONNECT.</p>
+          <p style="margin: 5px 0 0 !important;">For official grades and transcripts, please contact the university examination department.</p>
         </div>
       </div>
     </body>

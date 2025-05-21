@@ -34,7 +34,7 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-background to-background/95 overflow-hidden relative">
       {/* Loading overlay for PDF generation */}
       {isGeneratingPDF && (
-        <div className="fixed inset-0 bg-black/80 z-[9999] flex flex-col items-center justify-center">
+        <div className="fixed inset-0 bg-black/80 z-[9999] flex flex-col items-center justify-center backdrop-blur-sm">
           <div className="bg-card p-8 rounded-xl border border-primary/30 shadow-xl flex flex-col items-center max-w-md text-center">
             <Loader2 className="h-16 w-16 animate-spin text-primary mb-6" />
             <h3 className="text-2xl font-semibold mb-2">Generating PDF Report</h3>
