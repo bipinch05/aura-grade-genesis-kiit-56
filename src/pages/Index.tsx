@@ -32,12 +32,24 @@ const Index = () => {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-background/95 overflow-hidden relative">
-      {/* Loading overlay for PDF generation */}
+      {/* Loading overlay for PDF generation - enhanced for better visibility and user guidance */}
       {isGeneratingPDF && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex flex-col items-center justify-center">
-          <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
-          <p className="text-xl font-medium text-white">Generating your PDF...</p>
-          <p className="text-sm text-gray-300 mt-2">Please don't close this window</p>
+        <div className="fixed inset-0 bg-black/90 z-[9999] flex flex-col items-center justify-center backdrop-blur-sm">
+          <div className="bg-background/20 p-8 rounded-xl backdrop-blur-md border border-primary/30 shadow-xl flex flex-col items-center">
+            <Loader2 className="h-16 w-16 animate-spin text-primary mb-6" />
+            <p className="text-2xl font-medium text-white mb-2">Generating your PDF...</p>
+            <p className="text-sm text-gray-300 mb-6 max-w-sm text-center">
+              Please don't close this window. Your report is being created and will download automatically.
+            </p>
+            <div className="w-64 h-2 bg-gray-700 rounded-full overflow-hidden">
+              <motion.div 
+                className="h-full bg-primary"
+                initial={{ width: "0%" }}
+                animate={{ width: "100%" }}
+                transition={{ duration: 3, repeat: Infinity }}
+              />
+            </div>
+          </div>
         </div>
       )}
       

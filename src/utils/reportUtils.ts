@@ -13,44 +13,56 @@ export interface ReportData {
 }
 
 export const generatePDF = (data: ReportData, type: 'sgpa' | 'cgpa'): void => {
-  // Create a container for the report with explicit dimensions and styling
+  // Create a container with very explicit styling to ensure consistent rendering
   const reportContainer = document.createElement('div');
-  reportContainer.style.width = '210mm'; // A4 width
-  reportContainer.style.minHeight = '297mm'; // A4 height
-  reportContainer.style.backgroundColor = '#111'; // Ensure background color renders
-  reportContainer.style.color = '#fff'; // Ensure text is visible
-  reportContainer.style.position = 'fixed'; // Use fixed to ensure it's in the viewport
-  reportContainer.style.zIndex = '-1000'; // Keep it behind everything
-  reportContainer.style.left = '-9999px'; // Position off-screen but still rendered
   
-  // Add the HTML content to the container
+  // Set explicit dimensions and styling
+  reportContainer.style.width = '210mm';
+  reportContainer.style.height = '297mm';
+  reportContainer.style.padding = '0';
+  reportContainer.style.margin = '0';
+  reportContainer.style.overflow = 'hidden';
+  reportContainer.style.backgroundColor = '#111';
+  reportContainer.style.color = '#fff';
+  reportContainer.style.fontFamily = "'Poppins', Arial, sans-serif";
+  
+  // Position off-screen but ensure it's rendered
+  reportContainer.style.position = 'absolute';
+  reportContainer.style.left = '-9999px';
+  reportContainer.style.top = '0';
+  reportContainer.style.zIndex = '-9999';
+  
+  // Add the HTML content
   reportContainer.innerHTML = generateReportHTML(data, type);
   
-  // Append to document body
+  // Append to document body and force layout calculation
   document.body.appendChild(reportContainer);
   
-  // Give browser more time to render the content before capturing it
+  // Force layout recalculation
+  void reportContainer.offsetHeight;
+  
+  // Set a longer timeout to ensure full rendering
   setTimeout(() => {
-    // Set options for PDF with more aggressive settings for reliability
+    // Configure html2pdf with more aggressive settings
     const options = {
       margin: 0,
       filename: `${data.studentName}_${type === 'sgpa' ? 'SGPA' : 'CGPA'}_Report.pdf`,
       image: { type: 'jpeg', quality: 1 },
       html2canvas: { 
-        scale: 2, // Higher scale for better quality
-        useCORS: true, 
+        scale: 2,
+        useCORS: true,
         logging: true,
         allowTaint: true,
-        backgroundColor: '#111', // Match the background color
+        backgroundColor: '#111',
         letterRendering: true,
-        removeContainer: true,
-        windowWidth: 1200, // Force a specific viewport width
+        removeContainer: false, // We'll manually remove it
+        windowWidth: 1200, 
         scrollX: 0,
         scrollY: 0
       },
-      jsPDF: { 
-        unit: 'mm', 
-        format: 'a4', 
+      jsPDF: {
+        unit: 'mm',
+        format: 'a4',
         orientation: 'portrait',
         compress: true,
         hotfixes: ["px_scaling"]
@@ -64,7 +76,7 @@ export const generatePDF = (data: ReportData, type: 'sgpa' | 'cgpa'): void => {
       .save()
       .then(() => {
         console.log('PDF generation completed successfully');
-        // Clean up - remove the temporary container
+        // Clean up
         if (document.body.contains(reportContainer)) {
           document.body.removeChild(reportContainer);
         }
@@ -76,14 +88,14 @@ export const generatePDF = (data: ReportData, type: 'sgpa' | 'cgpa'): void => {
           document.body.removeChild(reportContainer);
         }
       });
-  }, 1000); // Increased timeout to 1000ms for better rendering
+  }, 1500); // Increased timeout for better rendering
 };
 
 const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => {
   // Common header with adjusted padding for full bleed
   let html = `
     <div style="
-      font-family: 'Poppins', sans-serif;
+      font-family: 'Poppins', Arial, sans-serif;
       max-width: 100%;
       margin: 0;
       padding: 30px;
@@ -397,7 +409,7 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
     `;
   }
   
-  // Common footer - moved up to avoid white space
+  // Common footer
   html += `
       <div style="
         padding-top: 20px;
