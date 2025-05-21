@@ -32,21 +32,21 @@ const Index = () => {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-background/95 overflow-hidden relative">
-      {/* Loading overlay for PDF generation - enhanced for better visibility and user guidance */}
+      {/* Loading overlay for PDF generation */}
       {isGeneratingPDF && (
-        <div className="fixed inset-0 bg-black/90 z-[9999] flex flex-col items-center justify-center backdrop-blur-sm">
-          <div className="bg-background/20 p-8 rounded-xl backdrop-blur-md border border-primary/30 shadow-xl flex flex-col items-center">
+        <div className="fixed inset-0 bg-black/80 z-[9999] flex flex-col items-center justify-center">
+          <div className="bg-card p-8 rounded-xl border border-primary/30 shadow-xl flex flex-col items-center max-w-md text-center">
             <Loader2 className="h-16 w-16 animate-spin text-primary mb-6" />
-            <p className="text-2xl font-medium text-white mb-2">Generating your PDF...</p>
-            <p className="text-sm text-gray-300 mb-6 max-w-sm text-center">
-              Please don't close this window. Your report is being created and will download automatically.
+            <h3 className="text-2xl font-semibold mb-2">Generating PDF Report</h3>
+            <p className="text-muted-foreground mb-6">
+              Please wait while we create your document. This will download automatically when complete.
             </p>
-            <div className="w-64 h-2 bg-gray-700 rounded-full overflow-hidden">
+            <div className="w-64 h-2 bg-muted rounded-full overflow-hidden">
               <motion.div 
                 className="h-full bg-primary"
                 initial={{ width: "0%" }}
                 animate={{ width: "100%" }}
-                transition={{ duration: 3, repeat: Infinity }}
+                transition={{ duration: 2.5 }}
               />
             </div>
           </div>

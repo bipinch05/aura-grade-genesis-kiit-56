@@ -1,3 +1,4 @@
+
 import html2pdf from 'html2pdf.js';
 import { Subject, Semester } from './calculationUtils';
 
@@ -13,212 +14,244 @@ export interface ReportData {
 }
 
 export const generatePDF = (data: ReportData, type: 'sgpa' | 'cgpa'): void => {
-  // Create a container with very explicit styling to ensure consistent rendering
-  const reportContainer = document.createElement('div');
+  // Create the report content
+  const html = generateReportHTML(data, type);
   
-  // Set explicit dimensions and styling
-  reportContainer.style.width = '210mm';
-  reportContainer.style.height = '297mm';
-  reportContainer.style.padding = '0';
-  reportContainer.style.margin = '0';
-  reportContainer.style.overflow = 'hidden';
-  reportContainer.style.backgroundColor = '#111';
-  reportContainer.style.color = '#fff';
-  reportContainer.style.fontFamily = "'Poppins', Arial, sans-serif";
+  // Create a dedicated container for the PDF
+  const container = document.createElement('div');
+  container.style.width = '210mm';
+  container.style.backgroundColor = '#111';
+  container.style.position = 'absolute';
+  container.style.top = '-9999px';
+  container.style.left = '-9999px';
+  container.innerHTML = html;
   
-  // Position off-screen but ensure it's rendered
-  reportContainer.style.position = 'absolute';
-  reportContainer.style.left = '-9999px';
-  reportContainer.style.top = '0';
-  reportContainer.style.zIndex = '-9999';
+  // Append to document body to render it
+  document.body.appendChild(container);
   
-  // Add the HTML content
-  reportContainer.innerHTML = generateReportHTML(data, type);
-  
-  // Append to document body and force layout calculation
-  document.body.appendChild(reportContainer);
-  
-  // Force layout recalculation
-  void reportContainer.offsetHeight;
-  
-  // Set a longer timeout to ensure full rendering
+  // Configure html2pdf options
+  const opt = {
+    margin: 10,
+    filename: `${data.studentName}_${type === 'sgpa' ? 'SGPA' : 'CGPA'}_Report.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { 
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#111'
+    },
+    jsPDF: { 
+      unit: 'mm', 
+      format: 'a4', 
+      orientation: 'portrait' 
+    }
+  };
+
+  // Use a generous timeout to ensure the container is fully rendered
   setTimeout(() => {
-    // Configure html2pdf with more aggressive settings
-    const options = {
-      margin: 0,
-      filename: `${data.studentName}_${type === 'sgpa' ? 'SGPA' : 'CGPA'}_Report.pdf`,
-      image: { type: 'jpeg', quality: 1 },
-      html2canvas: { 
-        scale: 2,
-        useCORS: true,
-        logging: true,
-        allowTaint: true,
-        backgroundColor: '#111',
-        letterRendering: true,
-        removeContainer: false, // We'll manually remove it
-        windowWidth: 1200, 
-        scrollX: 0,
-        scrollY: 0
-      },
-      jsPDF: {
-        unit: 'mm',
-        format: 'a4',
-        orientation: 'portrait',
-        compress: true,
-        hotfixes: ["px_scaling"]
+    // Generate PDF
+    html2pdf().from(container).set(opt).save().then(() => {
+      console.log('PDF generation completed successfully');
+      // Clean up
+      if (document.body.contains(container)) {
+        document.body.removeChild(container);
       }
-    };
-    
-    // Generate PDF with improved error handling
-    html2pdf()
-      .from(reportContainer)
-      .set(options)
-      .save()
-      .then(() => {
-        console.log('PDF generation completed successfully');
-        // Clean up
-        if (document.body.contains(reportContainer)) {
-          document.body.removeChild(reportContainer);
-        }
-      })
-      .catch((error) => {
-        console.error('PDF generation error:', error);
-        // Clean up even if there's an error
-        if (document.body.contains(reportContainer)) {
-          document.body.removeChild(reportContainer);
-        }
-      });
-  }, 1500); // Increased timeout for better rendering
+    }).catch(error => {
+      console.error('PDF generation error:', error);
+      // Clean up even on error
+      if (document.body.contains(container)) {
+        document.body.removeChild(container);
+      }
+    });
+  }, 1000);
 };
 
 const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => {
-  // Common header with adjusted padding for full bleed
-  let html = `
-    <div style="
-      font-family: 'Poppins', Arial, sans-serif;
-      max-width: 100%;
+  // Base styles
+  const styles = `
+    * {
+      box-sizing: border-box;
+      font-family: 'Arial', sans-serif;
+    }
+    body {
       margin: 0;
-      padding: 30px;
-      background: linear-gradient(135deg, #111, #1a1a1a);
+      padding: 0;
+      background-color: #111;
       color: #fff;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px;
+      background-color: #111;
+    }
+    .header {
       display: flex;
-      flex-direction: column;
-      height: 100%;
-      overflow: hidden;
-      position: relative;
-    ">
-      <div style="
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 30px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      ">
-        <div style="display: flex; align-items: center;">
-          <div style="
-            position: relative;
-            width: 40px;
-            height: 40px;
-            margin-right: 15px;
-          ">
-            <div style="
-              position: absolute;
-              inset: 0;
-              background-color: #C084FC;
-              border-radius: 5px;
-              transform: rotate(45deg);
-            "></div>
-            <div style="
-              position: absolute;
-              inset: 5px;
-              background-color: #1a1a1a;
-              border-radius: 3px;
-              transform: rotate(45deg);
-            "></div>
-            <div style="
-              position: absolute;
-              inset: 10px;
-              background-color: #67E8F9;
-              border-radius: 1px;
-              transform: rotate(45deg);
-            "></div>
-          </div>
+      justify-content: space-between;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .title {
+      font-size: 24px;
+      font-weight: 700;
+      margin: 0;
+    }
+    .subtitle {
+      font-size: 12px;
+      color: #999;
+      margin: 0;
+    }
+    .info-card {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 25px;
+    }
+    .info-title {
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 18px;
+      color: #C084FC;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    .info-item {
+      margin: 8px 0;
+      font-size: 14px;
+    }
+    .info-label {
+      color: #999;
+    }
+    .info-value {
+      font-weight: 500;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.2);
+    }
+    td {
+      padding: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    tr:nth-child(even) {
+      background: rgba(0, 0, 0, 0.1);
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 5px 10px;
+      color: #000;
+      font-weight: 600;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .result-box {
+      background: linear-gradient(135deg, #9b87f5, #0EA5E9);
+      padding: 15px 60px;
+      border-radius: 100px;
+      text-align: center;
+      margin: 30px auto;
+      width: fit-content;
+    }
+    .result-label {
+      margin: 0;
+      font-size: 16px;
+      color: #fff;
+      font-weight: 500;
+    }
+    .result-value {
+      margin: 10px 0 0;
+      font-size: 48px;
+      color: #fff;
+      font-weight: 700;
+    }
+    .footer {
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
+      font-size: 12px;
+      color: #999;
+      margin-top: 40px;
+    }
+  `;
+
+  // Start building the HTML
+  let html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>${styles}</style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
           <div>
-            <h1 style="margin: 0; font-size: 24px; font-weight: 700;">
+            <h1 class="title">
               <span style="color: #C084FC;">KIIT</span>
               <span style="color: #67E8F9;">-CONNECT</span>
             </h1>
-            <p style="margin: 0; font-size: 12px; color: #999;">Academic Performance Report</p>
+            <p class="subtitle">Academic Performance Report</p>
+          </div>
+          <div style="text-align: right;">
+            <p class="info-item">Generated on: ${new Date().toLocaleDateString()}</p>
+            <p class="info-item" style="color: #C084FC;">${type === 'sgpa' ? 'SGPA' : 'CGPA'} Report</p>
           </div>
         </div>
-        <div style="text-align: right;">
-          <p style="margin: 0; font-size: 14px;">Generated on: ${new Date().toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          })}</p>
-          <p style="margin: 0; font-size: 14px; color: #C084FC;">${type === 'sgpa' ? 'SGPA' : 'CGPA'} Report</p>
-        </div>
-      </div>
-      
-      <div style="
-        background: rgba(255, 255, 255, 0.05);
-        padding: 20px;
-        border-radius: 8px;
-        margin-bottom: 25px;
-      ">
-        <h2 style="margin-top: 0; margin-bottom: 15px; font-size: 18px; color: #C084FC;">Student Information</h2>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-          <div>
-            <p style="margin: 8px 0; font-size: 14px;">
-              <span style="color: #999;">Name:</span> 
-              <span style="font-weight: 500;">${data.studentName}</span>
-            </p>
-            <p style="margin: 8px 0; font-size: 14px;">
-              <span style="color: #999;">Roll Number:</span> 
-              <span style="font-weight: 500;">${data.rollNumber}</span>
-            </p>
-          </div>
-          <div>
-            <p style="margin: 8px 0; font-size: 14px;">
-              <span style="color: #999;">Branch:</span> 
-              <span style="font-weight: 500;">${data.branch}</span>
-            </p>
-            <p style="margin: 8px 0; font-size: 14px;">
-              <span style="color: #999;">Semester:</span> 
-              <span style="font-weight: 500;">${data.semester}</span>
-            </p>
+        
+        <div class="info-card">
+          <h2 class="info-title">Student Information</h2>
+          <div class="info-grid">
+            <div>
+              <p class="info-item">
+                <span class="info-label">Name:</span> 
+                <span class="info-value">${data.studentName}</span>
+              </p>
+              <p class="info-item">
+                <span class="info-label">Roll Number:</span> 
+                <span class="info-value">${data.rollNumber}</span>
+              </p>
+            </div>
+            <div>
+              <p class="info-item">
+                <span class="info-label">Branch:</span> 
+                <span class="info-value">${data.branch}</span>
+              </p>
+              <p class="info-item">
+                <span class="info-label">Semester:</span> 
+                <span class="info-value">${data.semester}</span>
+              </p>
+            </div>
           </div>
         </div>
-      </div>
   `;
   
   // SGPA specific content
   if (type === 'sgpa') {
     html += `
-      <div style="
-        background: rgba(255, 255, 255, 0.05);
-        padding: 20px;
-        border-radius: 8px;
-        margin-bottom: 25px;
-        flex-grow: 1;
-      ">
-        <h2 style="margin-top: 0; margin-bottom: 15px; font-size: 18px; color: #C084FC;">Semester Performance</h2>
-        <table style="width: 100%; border-collapse: collapse;">
+      <div class="info-card">
+        <h2 class="info-title">Semester Performance</h2>
+        <table>
           <thead>
-            <tr style="background: rgba(0, 0, 0, 0.2);">
-              <th style="padding: 10px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">Subject</th>
-              <th style="padding: 10px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">Credits</th>
-              <th style="padding: 10px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">Grade</th>
-              <th style="padding: 10px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">Grade Points</th>
+            <tr>
+              <th>Subject</th>
+              <th style="text-align: center;">Credits</th>
+              <th style="text-align: center;">Grade</th>
+              <th style="text-align: center;">Grade Points</th>
             </tr>
           </thead>
           <tbody>
     `;
     
-    data.subjects.forEach((subject, index) => {
+    data.subjects.forEach(subject => {
       const gradePoint = subject.grade ? 
         ['O', 'E', 'A', 'B', 'C', 'D', 'F'].indexOf(subject.grade) >= 0 ? 
           (10 - ['O', 'E', 'A', 'B', 'C', 'D', 'F'].indexOf(subject.grade)) : 0 : 0;
@@ -231,21 +264,15 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
       else if (subject.grade === 'F') gradeColor = '#f43f5e';
       
       html += `
-        <tr style="background: ${index % 2 === 0 ? 'transparent' : 'rgba(0, 0, 0, 0.1)'};">
-          <td style="padding: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">${subject.name}</td>
-          <td style="padding: 10px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">${subject.credit}</td>
-          <td style="padding: 10px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-            <span style="
-              display: inline-block;
-              padding: 5px 10px;
-              background-color: ${gradeColor};
-              color: #000;
-              font-weight: 600;
-              border-radius: 4px;
-              font-size: 12px;
-            ">${subject.grade}</span>
+        <tr>
+          <td>${subject.name}</td>
+          <td style="text-align: center;">${subject.credit}</td>
+          <td style="text-align: center;">
+            <span class="grade-badge" style="background-color: ${gradeColor};">
+              ${subject.grade}
+            </span>
           </td>
-          <td style="padding: 10px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">${gradePoint}</td>
+          <td style="text-align: center;">${gradePoint}</td>
         </tr>
       `;
     });
@@ -255,63 +282,29 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
         </table>
       </div>
       
-      <div style="
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-top: 20px;
-        margin-bottom: 30px;
-      ">
-        <div style="
-          background: linear-gradient(135deg, #9b87f5, #0EA5E9);
-          padding: 15px 60px;
-          border-radius: 100px;
-          text-align: center;
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-          position: relative;
-          overflow: hidden;
-        ">
-          <div style="
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(155, 135, 245, 0.3), rgba(14, 165, 233, 0.3));
-            filter: blur(20px);
-            z-index: 0;
-          "></div>
-          <div style="position: relative; z-index: 1;">
-            <p style="margin: 0; font-size: 16px; color: #fff; font-weight: 500; text-shadow: 0 1px 3px rgba(0,0,0,0.2);">Semester Grade Point Average (SGPA)</p>
-            <h2 style="margin: 10px 0 0; font-size: 48px; color: #fff; font-weight: 700; text-shadow: 0 2px 5px rgba(0,0,0,0.3);">${data.sgpa.toFixed(2)}</h2>
-          </div>
-        </div>
+      <div class="result-box">
+        <p class="result-label">Semester Grade Point Average (SGPA)</p>
+        <h2 class="result-value">${data.sgpa.toFixed(2)}</h2>
       </div>
     `;
   } 
   // CGPA specific content
   else if (type === 'cgpa' && data.allSemesters) {
     html += `
-      <div style="
-        background: rgba(255, 255, 255, 0.05);
-        padding: 20px;
-        border-radius: 8px;
-        margin-bottom: 25px;
-        flex-grow: 1;
-      ">
-        <h2 style="margin-top: 0; margin-bottom: 15px; font-size: 18px; color: #C084FC;">Academic Performance Summary</h2>
-        <table style="width: 100%; border-collapse: collapse;">
+      <div class="info-card">
+        <h2 class="info-title">Academic Performance Summary</h2>
+        <table>
           <thead>
-            <tr style="background: rgba(0, 0, 0, 0.2);">
-              <th style="padding: 10px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">Semester</th>
-              <th style="padding: 10px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">Credits</th>
-              <th style="padding: 10px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">SGPA</th>
+            <tr>
+              <th>Semester</th>
+              <th style="text-align: center;">Credits</th>
+              <th style="text-align: center;">SGPA</th>
             </tr>
           </thead>
           <tbody>
     `;
     
-    data.allSemesters.forEach((semester, index) => {
+    data.allSemesters.forEach(semester => {
       let sgpaColor = '#999';
       if (semester.sgpa >= 9.0) sgpaColor = '#4ade80';
       else if (semester.sgpa >= 8.0) sgpaColor = '#22d3ee';
@@ -320,19 +313,13 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
       else sgpaColor = '#f43f5e';
       
       html += `
-        <tr style="background: ${index % 2 === 0 ? 'transparent' : 'rgba(0, 0, 0, 0.1)'};">
-          <td style="padding: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">${semester.name}</td>
-          <td style="padding: 10px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">${semester.credits}</td>
-          <td style="padding: 10px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-            <span style="
-              display: inline-block;
-              padding: 5px 10px;
-              background-color: ${sgpaColor};
-              color: #000;
-              font-weight: 600;
-              border-radius: 4px;
-              font-size: 12px;
-            ">${semester.sgpa.toFixed(2)}</span>
+        <tr>
+          <td>${semester.name}</td>
+          <td style="text-align: center;">${semester.credits}</td>
+          <td style="text-align: center;">
+            <span class="grade-badge" style="background-color: ${sgpaColor};">
+              ${semester.sgpa.toFixed(2)}
+            </span>
           </td>
         </tr>
       `;
@@ -343,62 +330,16 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
         </table>
       </div>
       
-      <div style="
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-top: 20px;
-        margin-bottom: 30px;
-      ">
-        <div style="
-          background: linear-gradient(135deg, #9b87f5, #0EA5E9);
-          padding: 15px 60px;
-          border-radius: 100px;
-          text-align: center;
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-          position: relative;
-          overflow: hidden;
-        ">
-          <div style="
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(155, 135, 245, 0.3), rgba(14, 165, 233, 0.3));
-            filter: blur(20px);
-            z-index: 0;
-          "></div>
-          <div style="position: relative; z-index: 1;">
-            <p style="margin: 0; font-size: 16px; color: #fff; font-weight: 500; text-shadow: 0 1px 3px rgba(0,0,0,0.2);">Cumulative Grade Point Average (CGPA)</p>
-            <h2 style="margin: 10px 0 0; font-size: 48px; color: #fff; font-weight: 700; text-shadow: 0 2px 5px rgba(0,0,0,0.3);">${(data.cgpa || 0).toFixed(2)}</h2>
-          </div>
-        </div>
+      <div class="result-box">
+        <p class="result-label">Cumulative Grade Point Average (CGPA)</p>
+        <h2 class="result-value">${(data.cgpa || 0).toFixed(2)}</h2>
       </div>
       
-      <div style="margin-top: 20px; margin-bottom: 30px; text-align: center;">
-        <div style="
-          width: 80%;
-          margin: 0 auto;
-          height: 10px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 5px;
-          overflow: hidden;
-        ">
-          <div style="
-            height: 100%;
-            width: ${Math.min(100, (data.cgpa || 0) * 10)}%;
-            background: linear-gradient(to right, #0EA5E9, #9b87f5);
-          "></div>
+      <div style="margin: 30px auto; width: 80%;">
+        <div style="height: 10px; background: rgba(255, 255, 255, 0.1); border-radius: 5px; overflow: hidden;">
+          <div style="height: 100%; width: ${Math.min(100, (data.cgpa || 0) * 10)}%; background: linear-gradient(to right, #0EA5E9, #9b87f5);"></div>
         </div>
-        <div style="
-          display: flex;
-          justify-content: space-between;
-          width: 80%;
-          margin: 5px auto 0;
-          font-size: 12px;
-          color: #999;
-        ">
+        <div style="display: flex; justify-content: space-between; margin-top: 5px; font-size: 12px; color: #999;">
           <span>0</span>
           <span>2.5</span>
           <span>5.0</span>
@@ -411,19 +352,13 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
   
   // Common footer
   html += `
-      <div style="
-        padding-top: 20px;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        text-align: center;
-        font-size: 12px;
-        color: #999;
-        margin-top: auto;
-        margin-bottom: 0;
-      ">
-        <p style="margin: 0;">This is an automatically generated report by KIIT-CONNECT.</p>
-        <p style="margin: 5px 0 0;">For official grades and transcripts, please contact the university examination department.</p>
+        <div class="footer">
+          <p style="margin: 0;">This is an automatically generated report by KIIT-CONNECT.</p>
+          <p style="margin: 5px 0 0;">For official grades and transcripts, please contact the university examination department.</p>
+        </div>
       </div>
-    </div>
+    </body>
+    </html>
   `;
   
   return html;
