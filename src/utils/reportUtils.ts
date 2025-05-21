@@ -27,11 +27,24 @@ export const generatePDF = (data: ReportData, type: 'sgpa' | 'cgpa'): void => {
   
   // Set options for PDF - adjusted margins to minimize white space
   const options = {
-    margin: [0, 0, 0, 0], // [top, right, bottom, left] - all set to 0 to eliminate white space
+    margin: 0, // Setting all margins to 0
     filename: `${data.studentName}_${type === 'sgpa' ? 'SGPA' : 'CGPA'}_Report.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, logging: false, letterRendering: true },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true, precision: 2 }
+    html2canvas: { 
+      scale: 2, 
+      useCORS: true, 
+      logging: false, 
+      letterRendering: true,
+      height: reportContainer.offsetHeight // Fix exact height
+    },
+    jsPDF: { 
+      unit: 'mm', 
+      format: 'a4', 
+      orientation: 'portrait', 
+      compress: true,
+      precision: 2,
+      hotfixes: ['px_scaling'] // Add hotfix for scaling issues
+    }
   };
   
   // Generate PDF
@@ -49,9 +62,11 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
       background: linear-gradient(135deg, #111, #1a1a1a);
       color: #fff;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      min-height: 100vh;
       display: flex;
       flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+      position: relative;
     ">
       <div style="
         display: flex;
@@ -204,17 +219,32 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
         display: flex;
         justify-content: center;
         align-items: center;
-        margin: 40px 0;
+        margin-top: 20px;
+        margin-bottom: 30px;
       ">
         <div style="
           background: linear-gradient(135deg, #9b87f5, #0EA5E9);
-          padding: 20px 60px;
+          padding: 15px 60px;
           border-radius: 100px;
           text-align: center;
           box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+          position: relative;
+          overflow: hidden;
         ">
-          <p style="margin: 0; font-size: 16px; color: #fff; font-weight: 500; text-shadow: 0 1px 3px rgba(0,0,0,0.2);">Semester Grade Point Average (SGPA)</p>
-          <h2 style="margin: 10px 0 0; font-size: 48px; color: #fff; font-weight: 700; text-shadow: 0 2px 5px rgba(0,0,0,0.3);">${data.sgpa.toFixed(2)}</h2>
+          <div style="
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(155, 135, 245, 0.3), rgba(14, 165, 233, 0.3));
+            filter: blur(20px);
+            z-index: 0;
+          "></div>
+          <div style="position: relative; z-index: 1;">
+            <p style="margin: 0; font-size: 16px; color: #fff; font-weight: 500; text-shadow: 0 1px 3px rgba(0,0,0,0.2);">Semester Grade Point Average (SGPA)</p>
+            <h2 style="margin: 10px 0 0; font-size: 48px; color: #fff; font-weight: 700; text-shadow: 0 2px 5px rgba(0,0,0,0.3);">${data.sgpa.toFixed(2)}</h2>
+          </div>
         </div>
       </div>
     `;
@@ -277,21 +307,36 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
         display: flex;
         justify-content: center;
         align-items: center;
-        margin: 40px 0;
+        margin-top: 20px;
+        margin-bottom: 30px;
       ">
         <div style="
           background: linear-gradient(135deg, #9b87f5, #0EA5E9);
-          padding: 20px 60px;
+          padding: 15px 60px;
           border-radius: 100px;
           text-align: center;
           box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+          position: relative;
+          overflow: hidden;
         ">
-          <p style="margin: 0; font-size: 16px; color: #fff; font-weight: 500; text-shadow: 0 1px 3px rgba(0,0,0,0.2);">Cumulative Grade Point Average (CGPA)</p>
-          <h2 style="margin: 10px 0 0; font-size: 48px; color: #fff; font-weight: 700; text-shadow: 0 2px 5px rgba(0,0,0,0.3);">${(data.cgpa || 0).toFixed(2)}</h2>
+          <div style="
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(155, 135, 245, 0.3), rgba(14, 165, 233, 0.3));
+            filter: blur(20px);
+            z-index: 0;
+          "></div>
+          <div style="position: relative; z-index: 1;">
+            <p style="margin: 0; font-size: 16px; color: #fff; font-weight: 500; text-shadow: 0 1px 3px rgba(0,0,0,0.2);">Cumulative Grade Point Average (CGPA)</p>
+            <h2 style="margin: 10px 0 0; font-size: 48px; color: #fff; font-weight: 700; text-shadow: 0 2px 5px rgba(0,0,0,0.3);">${(data.cgpa || 0).toFixed(2)}</h2>
+          </div>
         </div>
       </div>
       
-      <div style="margin-top: 30px; text-align: center;">
+      <div style="margin-top: 20px; margin-bottom: 30px; text-align: center;">
         <div style="
           width: 80%;
           margin: 0 auto;
@@ -324,15 +369,16 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
     `;
   }
   
-  // Common footer
+  // Common footer - moved up to avoid white space
   html += `
       <div style="
-        margin-top: auto;
         padding-top: 20px;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
         text-align: center;
         font-size: 12px;
         color: #999;
+        margin-top: auto;
+        margin-bottom: 0;
       ">
         <p style="margin: 0;">This is an automatically generated report by KIIT-CONNECT.</p>
         <p style="margin: 5px 0 0;">For official grades and transcripts, please contact the university examination department.</p>
@@ -342,3 +388,4 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
   
   return html;
 };
+

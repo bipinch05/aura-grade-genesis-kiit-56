@@ -66,7 +66,7 @@ const ResultsVisualizer: React.FC<ResultsVisualizerProps> = ({ sgpa, cgpa, subje
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-center">
-                <div className="relative w-36 h-36 sm:w-40 sm:h-40">
+                <div className="relative w-32 h-32 sm:w-40 sm:h-40">
                   <svg className="w-full h-full" viewBox="0 0 100 100">
                     <circle
                       cx="50"

@@ -78,7 +78,7 @@ const Index = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="max-w-5xl mx-auto bg-secondary/10 p-0.5 rounded-lg glass-card mb-12"
+          className="max-w-6xl mx-auto bg-secondary/10 p-0.5 rounded-lg glass-card mb-12"
         >
           <div className="backdrop-blur-xl p-6 rounded-lg">
             <Tabs defaultValue="sgpa" className="w-full">
@@ -92,7 +92,7 @@ const Index = () => {
               </TabsList>
               
               <TabsContent value="sgpa" className="mt-0">
-                <div className="grid grid-cols-1 gap-8 lg:gap-10">
+                <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-10">
                   <div>
                     <SGPACalculator 
                       setCalculatedSGPA={setCalculatedSGPA}
@@ -114,7 +114,7 @@ const Index = () => {
               </TabsContent>
               
               <TabsContent value="cgpa" className="mt-0">
-                <div className="grid grid-cols-1 gap-8 lg:gap-10">
+                <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-10">
                   <div>
                     <CGPACalculator 
                       setCalculatedCGPA={setCalculatedCGPA}
