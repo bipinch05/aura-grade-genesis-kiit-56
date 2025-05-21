@@ -13,50 +13,61 @@ export interface ReportData {
 }
 
 export const generatePDF = (data: ReportData, type: 'sgpa' | 'cgpa'): void => {
-  // First, create a separate container that won't be attached to the DOM
+  // Create a container for the report with explicit dimensions and styling
   const reportContainer = document.createElement('div');
+  reportContainer.style.width = '210mm'; // A4 width
+  reportContainer.style.minHeight = '297mm'; // A4 height
+  reportContainer.style.backgroundColor = '#111'; // Ensure background color renders
+  reportContainer.style.color = '#fff'; // Ensure text is visible
+  reportContainer.style.position = 'fixed'; // Use fixed to ensure it's in the viewport
+  reportContainer.style.zIndex = '-1000'; // Keep it behind everything
+  reportContainer.style.left = '-9999px'; // Position off-screen but still rendered
+  
+  // Add the HTML content to the container
   reportContainer.innerHTML = generateReportHTML(data, type);
   
-  // Temporarily append to document body to ensure proper rendering
-  // but keep it hidden from view
-  reportContainer.style.position = 'absolute';
-  reportContainer.style.left = '-9999px';
-  reportContainer.style.top = '-9999px';
+  // Append to document body
   document.body.appendChild(reportContainer);
   
-  // Give browser time to render the content before capturing it
+  // Give browser more time to render the content before capturing it
   setTimeout(() => {
-    // Set options for PDF with more conservative settings
+    // Set options for PDF with more aggressive settings for reliability
     const options = {
-      margin: 10, // Add some margin to prevent cutoff
+      margin: 0,
       filename: `${data.studentName}_${type === 'sgpa' ? 'SGPA' : 'CGPA'}_Report.pdf`,
-      image: { type: 'jpeg', quality: 0.95 },
+      image: { type: 'jpeg', quality: 1 },
       html2canvas: { 
-        scale: 1.5, // Lower scale for better performance
+        scale: 2, // Higher scale for better quality
         useCORS: true, 
-        logging: true, // Enable logging for debugging
-        allowTaint: true, // Allow cross-origin images
-        removeContainer: true // Clean up the temporary container
+        logging: true,
+        allowTaint: true,
+        backgroundColor: '#111', // Match the background color
+        letterRendering: true,
+        removeContainer: true,
+        windowWidth: 1200, // Force a specific viewport width
+        scrollX: 0,
+        scrollY: 0
       },
       jsPDF: { 
         unit: 'mm', 
         format: 'a4', 
         orientation: 'portrait',
-        compress: true
+        compress: true,
+        hotfixes: ["px_scaling"]
       }
     };
     
-    // Generate PDF with promise chain for better error handling
+    // Generate PDF with improved error handling
     html2pdf()
       .from(reportContainer)
       .set(options)
       .save()
       .then(() => {
+        console.log('PDF generation completed successfully');
         // Clean up - remove the temporary container
         if (document.body.contains(reportContainer)) {
           document.body.removeChild(reportContainer);
         }
-        console.log('PDF generation completed successfully');
       })
       .catch((error) => {
         console.error('PDF generation error:', error);
@@ -65,7 +76,7 @@ export const generatePDF = (data: ReportData, type: 'sgpa' | 'cgpa'): void => {
           document.body.removeChild(reportContainer);
         }
       });
-  }, 500); // 500ms delay to ensure DOM rendering
+  }, 1000); // Increased timeout to 1000ms for better rendering
 };
 
 const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => {

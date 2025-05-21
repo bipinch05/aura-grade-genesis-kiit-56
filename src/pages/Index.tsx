@@ -8,6 +8,7 @@ import CGPACalculator from '@/components/CGPACalculator';
 import ResultsVisualizer from '@/components/ResultsVisualizer';
 import { Subject } from '@/utils/calculationUtils';
 import { Toaster } from "@/components/ui/sonner";
+import { Loader2 } from 'lucide-react';
 
 const Index = () => {
   const [calculatedSGPA, setCalculatedSGPA] = useState(0);
@@ -31,6 +32,15 @@ const Index = () => {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-background/95 overflow-hidden relative">
+      {/* Loading overlay for PDF generation */}
+      {isGeneratingPDF && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex flex-col items-center justify-center">
+          <Loader2 className="h-16 w-16 animate-spin text-primary mb-4" />
+          <p className="text-xl font-medium text-white">Generating your PDF...</p>
+          <p className="text-sm text-gray-300 mt-2">Please don't close this window</p>
+        </div>
+      )}
+      
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden opacity-30 pointer-events-none">
         {[...Array(20)].map((_, i) => (
