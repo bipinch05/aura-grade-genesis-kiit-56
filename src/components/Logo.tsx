@@ -23,8 +23,20 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', animated = true, variant = 'de
   const logoIconVariants = {
     hover: { 
       rotate: 360,
-      scale: 1.05,
+      scale: 1.1,
       transition: { duration: 0.8, ease: "easeInOut" }
+    },
+    initial: {
+      rotate: 0,
+      scale: 1
+    },
+    pulse: {
+      scale: [1, 1.05, 1],
+      transition: {
+        duration: 2,
+        repeat: Infinity,
+        repeatType: "reverse"
+      }
     }
   };
 
@@ -37,6 +49,8 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', animated = true, variant = 'de
     >
       <motion.div 
         className="relative"
+        initial="initial"
+        animate="pulse"
         whileHover="hover"
         variants={logoIconVariants}
       >

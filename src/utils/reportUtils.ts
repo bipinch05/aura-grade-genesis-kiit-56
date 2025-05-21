@@ -25,9 +25,9 @@ export const generatePDF = (data: ReportData, type: 'sgpa' | 'cgpa'): void => {
     day: 'numeric'
   });
   
-  // Set options for PDF
+  // Set options for PDF - adjusted margins to minimize white space
   const options = {
-    margin: 10,
+    margin: 0, // Removed margins to fix white spacing
     filename: `${data.studentName}_${type === 'sgpa' ? 'SGPA' : 'CGPA'}_Report.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true },
@@ -39,16 +39,15 @@ export const generatePDF = (data: ReportData, type: 'sgpa' | 'cgpa'): void => {
 };
 
 const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => {
-  // Common header
+  // Common header with adjusted padding for full bleed
   let html = `
     <div style="
       font-family: 'Poppins', sans-serif;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
+      max-width: 100%;
+      margin: 0;
+      padding: 30px;
       background: linear-gradient(135deg, #111, #1a1a1a);
       color: #fff;
-      border-radius: 10px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     ">
       <div style="
@@ -201,19 +200,29 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-bottom: 30px;
+        margin: 40px 0;
       ">
         <div style="
-          background: linear-gradient(135deg, #C084FC, #67E8F9);
-          padding: 15px 40px;
+          background: linear-gradient(135deg, #9b87f5, #0EA5E9);
+          padding: 20px 60px;
           border-radius: 100px;
           text-align: center;
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+          transform: translateY(0);
+          animation: float 3s ease-in-out infinite;
         ">
-          <p style="margin: 0; font-size: 14px; color: #222; font-weight: 500;">Semester Grade Point Average (SGPA)</p>
-          <h2 style="margin: 5px 0 0; font-size: 36px; color: #000; font-weight: 700;">${data.sgpa.toFixed(2)}</h2>
+          <p style="margin: 0; font-size: 16px; color: #fff; font-weight: 500; text-shadow: 0 1px 3px rgba(0,0,0,0.2);">Semester Grade Point Average (SGPA)</p>
+          <h2 style="margin: 10px 0 0; font-size: 48px; color: #fff; font-weight: 700; text-shadow: 0 2px 5px rgba(0,0,0,0.3);">${data.sgpa.toFixed(2)}</h2>
         </div>
       </div>
+      
+      <style>
+        @keyframes float {
+          0% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+          100% { transform: translateY(0px); }
+        }
+      </style>
     `;
   } 
   // CGPA specific content
@@ -273,17 +282,19 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-bottom: 30px;
+        margin: 40px 0;
       ">
         <div style="
-          background: linear-gradient(135deg, #C084FC, #67E8F9);
-          padding: 15px 40px;
+          background: linear-gradient(135deg, #9b87f5, #0EA5E9);
+          padding: 20px 60px;
           border-radius: 100px;
           text-align: center;
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+          transform: translateY(0);
+          animation: float 3s ease-in-out infinite;
         ">
-          <p style="margin: 0; font-size: 14px; color: #222; font-weight: 500;">Cumulative Grade Point Average (CGPA)</p>
-          <h2 style="margin: 5px 0 0; font-size: 36px; color: #000; font-weight: 700;">${(data.cgpa || 0).toFixed(2)}</h2>
+          <p style="margin: 0; font-size: 16px; color: #fff; font-weight: 500; text-shadow: 0 1px 3px rgba(0,0,0,0.2);">Cumulative Grade Point Average (CGPA)</p>
+          <h2 style="margin: 10px 0 0; font-size: 48px; color: #fff; font-weight: 700; text-shadow: 0 2px 5px rgba(0,0,0,0.3);">${(data.cgpa || 0).toFixed(2)}</h2>
         </div>
       </div>
       
@@ -299,7 +310,7 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
           <div style="
             height: 100%;
             width: ${Math.min(100, (data.cgpa || 0) * 10)}%;
-            background: linear-gradient(to right, #67E8F9, #C084FC);
+            background: linear-gradient(to right, #0EA5E9, #9b87f5);
           "></div>
         </div>
         <div style="
@@ -317,6 +328,14 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
           <span>10.0</span>
         </div>
       </div>
+      
+      <style>
+        @keyframes float {
+          0% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+          100% { transform: translateY(0px); }
+        }
+      </style>
     `;
   }
   
