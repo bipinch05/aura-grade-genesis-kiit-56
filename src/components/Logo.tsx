@@ -35,7 +35,7 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', animated = true, variant = 'de
       transition: {
         duration: 2,
         repeat: Infinity,
-        repeatType: "reverse"
+        repeatType: "reverse" as const
       }
     }
   };
