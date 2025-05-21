@@ -7,6 +7,7 @@ import SGPACalculator from '@/components/SGPACalculator';
 import CGPACalculator from '@/components/CGPACalculator';
 import ResultsVisualizer from '@/components/ResultsVisualizer';
 import { Subject } from '@/utils/calculationUtils';
+import { Toaster } from "@/components/ui/sonner";
 
 const Index = () => {
   const [calculatedSGPA, setCalculatedSGPA] = useState(0);
@@ -14,6 +15,7 @@ const Index = () => {
   const [selectedSubjects, setSelectedSubjects] = useState<Subject[]>([]);
   const [branch, setBranch] = useState('');
   const [semester, setSemester] = useState('');
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   
   // Background particle effect
   const particleVariants = {
@@ -49,6 +51,7 @@ const Index = () => {
       </div>
       
       <Navbar />
+      <Toaster position="top-center" />
       
       <div className="container px-4 py-8 mx-auto">
         <motion.div
@@ -101,6 +104,8 @@ const Index = () => {
                       semester={semester}
                       setBranch={setBranch}
                       setSemester={setSemester}
+                      isGeneratingPDF={isGeneratingPDF}
+                      setIsGeneratingPDF={setIsGeneratingPDF}
                     />
                   </div>
                   <div>
@@ -122,6 +127,8 @@ const Index = () => {
                       subjects={selectedSubjects}
                       sgpa={calculatedSGPA}
                       semester={semester}
+                      isGeneratingPDF={isGeneratingPDF}
+                      setIsGeneratingPDF={setIsGeneratingPDF}
                     />
                   </div>
                   <div>

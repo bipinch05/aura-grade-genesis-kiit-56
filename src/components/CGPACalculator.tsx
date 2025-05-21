@@ -1,15 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { PlusCircle, Trash2, Download } from 'lucide-react';
+import { PlusCircle, Trash2, Download, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from 'sonner';
 import { calculateCGPA, Semester } from '@/utils/calculationUtils';
 import { generatePDF, ReportData } from '@/utils/reportUtils';
-import { toast } from '@/hooks/use-toast';
 import { v4 as uuidv4 } from '@/utils/uuidUtils';
 
 interface CGPACalculatorProps {
@@ -18,6 +17,8 @@ interface CGPACalculatorProps {
   subjects: any[];
   sgpa: number;
   semester: string;
+  isGeneratingPDF: boolean;
+  setIsGeneratingPDF: (isGenerating: boolean) => void;
 }
 
 const CGPACalculator: React.FC<CGPACalculatorProps> = ({ 
@@ -25,7 +26,9 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   branch,
   subjects,
   sgpa,
-  semester
+  semester,
+  isGeneratingPDF,
+  setIsGeneratingPDF
 }) => {
   const [semesters, setSemesters] = useState<Semester[]>([]);
   const [studentName, setStudentName] = useState('');
@@ -46,7 +49,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
         }
       ]);
     }
-  }, [sgpa, semester, subjects]);
+  }, [sgpa, semester, subjects, semesters]);
   
   // Update CGPA when semesters change
   useEffect(() => {
@@ -78,22 +81,23 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   
   const handleGenerateReport = () => {
     if (!studentName || !rollNumber) {
-      toast({
-        title: "Missing Information",
-        description: "Please enter student name and roll number",
-        variant: "destructive"
+      toast.error("Missing Information", {
+        description: "Please enter student name and roll number"
       });
       return;
     }
     
     if (semesters.some(s => !s.name || s.sgpa === 0)) {
-      toast({
-        title: "Incomplete Semester Data",
-        description: "Please fill in all semester names and SGPAs",
-        variant: "destructive"
+      toast.error("Incomplete Semester Data", {
+        description: "Please fill in all semester names and SGPAs"
       });
       return;
     }
+    
+    setIsGeneratingPDF(true);
+    toast.info("Generating PDF", {
+      description: "Please wait while we generate your report..."
+    });
     
     const reportData: ReportData = {
       studentName,
@@ -106,11 +110,23 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
       cgpa: calculateCGPA(semesters)
     };
     
-    generatePDF(reportData, 'cgpa');
-    toast({
-      title: "Success!",
-      description: "CGPA report generated successfully"
-    });
+    try {
+      generatePDF(reportData, 'cgpa');
+      
+      // Set a timeout to change the state back after some time
+      setTimeout(() => {
+        setIsGeneratingPDF(false);
+        toast.success("Success!", {
+          description: "CGPA report generated successfully"
+        });
+      }, 2000);
+    } catch (error) {
+      setIsGeneratingPDF(false);
+      toast.error("Error", {
+        description: "Failed to generate PDF. Please try again."
+      });
+      console.error("PDF generation error:", error);
+    }
   };
   
   const containerVariants = {
@@ -249,9 +265,19 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
             <Button 
               className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
               onClick={handleGenerateReport}
+              disabled={isGeneratingPDF}
             >
-              <Download className="mr-2 h-4 w-4" />
-              Generate CGPA Report
+              {isGeneratingPDF ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating PDF...
+                </>
+              ) : (
+                <>
+                  <Download className="mr-2 h-4 w-4" />
+                  Generate CGPA Report
+                </>
+              )}
             </Button>
           </CardFooter>
         </Card>

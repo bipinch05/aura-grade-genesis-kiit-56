@@ -1,4 +1,3 @@
-
 import html2pdf from 'html2pdf.js';
 import { Subject, Semester } from './calculationUtils';
 
@@ -14,41 +13,59 @@ export interface ReportData {
 }
 
 export const generatePDF = (data: ReportData, type: 'sgpa' | 'cgpa'): void => {
-  // Create a report container
+  // First, create a separate container that won't be attached to the DOM
   const reportContainer = document.createElement('div');
   reportContainer.innerHTML = generateReportHTML(data, type);
   
-  // Get the current date
-  const date = new Date().toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  // Temporarily append to document body to ensure proper rendering
+  // but keep it hidden from view
+  reportContainer.style.position = 'absolute';
+  reportContainer.style.left = '-9999px';
+  reportContainer.style.top = '-9999px';
+  document.body.appendChild(reportContainer);
   
-  // Set options for PDF - adjusted margins to minimize white space
-  const options = {
-    margin: 0, // Setting all margins to 0
-    filename: `${data.studentName}_${type === 'sgpa' ? 'SGPA' : 'CGPA'}_Report.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { 
-      scale: 2, 
-      useCORS: true, 
-      logging: false, 
-      letterRendering: true,
-      height: reportContainer.offsetHeight // Fix exact height
-    },
-    jsPDF: { 
-      unit: 'mm', 
-      format: 'a4', 
-      orientation: 'portrait', 
-      compress: true,
-      precision: 2,
-      hotfixes: ['px_scaling'] // Add hotfix for scaling issues
-    }
-  };
-  
-  // Generate PDF
-  html2pdf().from(reportContainer).set(options).save();
+  // Give browser time to render the content before capturing it
+  setTimeout(() => {
+    // Set options for PDF with more conservative settings
+    const options = {
+      margin: 10, // Add some margin to prevent cutoff
+      filename: `${data.studentName}_${type === 'sgpa' ? 'SGPA' : 'CGPA'}_Report.pdf`,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { 
+        scale: 1.5, // Lower scale for better performance
+        useCORS: true, 
+        logging: true, // Enable logging for debugging
+        allowTaint: true, // Allow cross-origin images
+        removeContainer: true // Clean up the temporary container
+      },
+      jsPDF: { 
+        unit: 'mm', 
+        format: 'a4', 
+        orientation: 'portrait',
+        compress: true
+      }
+    };
+    
+    // Generate PDF with promise chain for better error handling
+    html2pdf()
+      .from(reportContainer)
+      .set(options)
+      .save()
+      .then(() => {
+        // Clean up - remove the temporary container
+        if (document.body.contains(reportContainer)) {
+          document.body.removeChild(reportContainer);
+        }
+        console.log('PDF generation completed successfully');
+      })
+      .catch((error) => {
+        console.error('PDF generation error:', error);
+        // Clean up even if there's an error
+        if (document.body.contains(reportContainer)) {
+          document.body.removeChild(reportContainer);
+        }
+      });
+  }, 500); // 500ms delay to ensure DOM rendering
 };
 
 const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => {
@@ -388,4 +405,3 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
   
   return html;
 };
-

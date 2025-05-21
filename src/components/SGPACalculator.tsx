@@ -1,12 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { PlusCircle, Trash2, Download, FileCheck, BarChart, BookOpen } from 'lucide-react';
+import { PlusCircle, Trash2, Download, FileCheck, BarChart, BookOpen, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from 'sonner'; 
 import { 
   Subject, 
   calculateSGPA, 
@@ -18,7 +18,6 @@ import {
   branchSubjectMap 
 } from '@/utils/calculationUtils';
 import { generatePDF, ReportData } from '@/utils/reportUtils';
-import { toast } from '@/hooks/use-toast';
 import { v4 as uuidv4 } from '@/utils/uuidUtils';
 
 interface SGPACalculatorProps {
@@ -28,6 +27,8 @@ interface SGPACalculatorProps {
   semester: string;
   setBranch: (branch: string) => void;
   setSemester: (semester: string) => void;
+  isGeneratingPDF: boolean;
+  setIsGeneratingPDF: (isGenerating: boolean) => void;
 }
 
 const SGPACalculator: React.FC<SGPACalculatorProps> = ({ 
@@ -36,7 +37,9 @@ const SGPACalculator: React.FC<SGPACalculatorProps> = ({
   branch,
   semester,
   setBranch,
-  setSemester
+  setSemester,
+  isGeneratingPDF,
+  setIsGeneratingPDF
 }) => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [studentName, setStudentName] = useState('');
@@ -79,22 +82,23 @@ const SGPACalculator: React.FC<SGPACalculatorProps> = ({
   
   const handleGenerateReport = () => {
     if (!studentName || !rollNumber) {
-      toast({
-        title: "Missing Information",
+      toast.error("Missing Information", {
         description: "Please enter student name and roll number",
-        variant: "destructive"
       });
       return;
     }
     
     if (subjects.some(s => !s.name || s.grade === '')) {
-      toast({
-        title: "Incomplete Subject Data",
+      toast.error("Incomplete Subject Data", {
         description: "Please fill in all subject names and grades",
-        variant: "destructive"
       });
       return;
     }
+    
+    setIsGeneratingPDF(true);
+    toast.info("Generating PDF", {
+      description: "Please wait while we generate your report..."
+    });
     
     const reportData: ReportData = {
       studentName,
@@ -105,11 +109,24 @@ const SGPACalculator: React.FC<SGPACalculatorProps> = ({
       sgpa: calculateSGPA(subjects),
     };
     
-    generatePDF(reportData, 'sgpa');
-    toast({
-      title: "Success!",
-      description: "SGPA report generated and downloaded successfully"
-    });
+    try {
+      generatePDF(reportData, 'sgpa');
+      
+      // Set a timeout to change the state back after some time
+      // to ensure the UI shows success even if PDF download takes time
+      setTimeout(() => {
+        setIsGeneratingPDF(false);
+        toast.success("Success!", {
+          description: "SGPA report generated successfully"
+        });
+      }, 2000);
+    } catch (error) {
+      setIsGeneratingPDF(false);
+      toast.error("Error", {
+        description: "Failed to generate PDF. Please try again."
+      });
+      console.error("PDF generation error:", error);
+    }
   };
   
   const containerVariants = {
@@ -331,9 +348,19 @@ const SGPACalculator: React.FC<SGPACalculatorProps> = ({
             <Button 
               className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity flex gap-2 items-center"
               onClick={handleGenerateReport}
+              disabled={isGeneratingPDF}
             >
-              <FileCheck className="h-4 w-4" />
-              Generate SGPA Report
+              {isGeneratingPDF ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Generating PDF...
+                </>
+              ) : (
+                <>
+                  <FileCheck className="h-4 w-4" />
+                  Generate SGPA Report
+                </>
+              )}
             </Button>
           </CardFooter>
         </Card>
