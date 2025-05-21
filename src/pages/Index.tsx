@@ -92,8 +92,8 @@ const Index = () => {
               </TabsList>
               
               <TabsContent value="sgpa" className="mt-0">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  <div className="lg:col-span-2">
+                <div className="grid grid-cols-1 gap-8 lg:gap-10">
+                  <div>
                     <SGPACalculator 
                       setCalculatedSGPA={setCalculatedSGPA}
                       setSelectedSubjects={setSelectedSubjects}
@@ -103,21 +103,19 @@ const Index = () => {
                       setSemester={setSemester}
                     />
                   </div>
-                  <div className="lg:col-span-1">
-                    <div className="sticky top-4 space-y-4">
-                      <ResultsVisualizer 
-                        sgpa={calculatedSGPA}
-                        cgpa={calculatedCGPA}
-                        subjects={selectedSubjects}
-                      />
-                    </div>
+                  <div>
+                    <ResultsVisualizer 
+                      sgpa={calculatedSGPA}
+                      cgpa={calculatedCGPA}
+                      subjects={selectedSubjects}
+                    />
                   </div>
                 </div>
               </TabsContent>
               
               <TabsContent value="cgpa" className="mt-0">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  <div className="lg:col-span-2">
+                <div className="grid grid-cols-1 gap-8 lg:gap-10">
+                  <div>
                     <CGPACalculator 
                       setCalculatedCGPA={setCalculatedCGPA}
                       branch={branch}
@@ -126,14 +124,12 @@ const Index = () => {
                       semester={semester}
                     />
                   </div>
-                  <div className="lg:col-span-1">
-                    <div className="sticky top-4 space-y-4">
-                      <ResultsVisualizer 
-                        sgpa={calculatedSGPA}
-                        cgpa={calculatedCGPA}
-                        subjects={selectedSubjects}
-                      />
-                    </div>
+                  <div>
+                    <ResultsVisualizer 
+                      sgpa={calculatedSGPA}
+                      cgpa={calculatedCGPA}
+                      subjects={selectedSubjects}
+                    />
                   </div>
                 </div>
               </TabsContent>

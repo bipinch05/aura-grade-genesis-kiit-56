@@ -52,11 +52,12 @@ const ResultsVisualizer: React.FC<ResultsVisualizerProps> = ({ sgpa, cgpa, subje
   };
   
   return (
-    <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+    <div className="grid gap-6 grid-cols-1 md:grid-cols-2 w-full">
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
+        className="w-full"
       >
         <Card className="glass-card h-full border-primary/20">
           <CardHeader>
@@ -65,7 +66,7 @@ const ResultsVisualizer: React.FC<ResultsVisualizerProps> = ({ sgpa, cgpa, subje
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-center">
-                <div className="relative w-40 h-40">
+                <div className="relative w-36 h-36 sm:w-40 sm:h-40">
                   <svg className="w-full h-full" viewBox="0 0 100 100">
                     <circle
                       cx="50"
@@ -108,7 +109,7 @@ const ResultsVisualizer: React.FC<ResultsVisualizerProps> = ({ sgpa, cgpa, subje
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-2 mt-4">
+              <div className="grid grid-cols-2 gap-3 mt-4">
                 <div className="bg-secondary/30 rounded-lg p-3 text-center">
                   <div className="text-2xl font-bold">{totalCredits}</div>
                   <div className="text-xs text-muted-foreground">Total Credits</div>
@@ -134,6 +135,7 @@ const ResultsVisualizer: React.FC<ResultsVisualizerProps> = ({ sgpa, cgpa, subje
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
+        className="w-full"
       >
         <Card className="glass-card h-full border-primary/20">
           <CardHeader>

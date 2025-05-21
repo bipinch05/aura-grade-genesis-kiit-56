@@ -27,11 +27,11 @@ export const generatePDF = (data: ReportData, type: 'sgpa' | 'cgpa'): void => {
   
   // Set options for PDF - adjusted margins to minimize white space
   const options = {
-    margin: 0, // Removed margins to fix white spacing
+    margin: [0, 0, 0, 0], // [top, right, bottom, left] - all set to 0 to eliminate white space
     filename: `${data.studentName}_${type === 'sgpa' ? 'SGPA' : 'CGPA'}_Report.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    html2canvas: { scale: 2, useCORS: true, logging: false, letterRendering: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true, precision: 2 }
   };
   
   // Generate PDF
@@ -49,6 +49,9 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
       background: linear-gradient(135deg, #111, #1a1a1a);
       color: #fff;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     ">
       <div style="
         display: flex;
@@ -145,6 +148,7 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
         padding: 20px;
         border-radius: 8px;
         margin-bottom: 25px;
+        flex-grow: 1;
       ">
         <h2 style="margin-top: 0; margin-bottom: 15px; font-size: 18px; color: #C084FC;">Semester Performance</h2>
         <table style="width: 100%; border-collapse: collapse;">
@@ -208,21 +212,11 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
           border-radius: 100px;
           text-align: center;
           box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-          transform: translateY(0);
-          animation: float 3s ease-in-out infinite;
         ">
           <p style="margin: 0; font-size: 16px; color: #fff; font-weight: 500; text-shadow: 0 1px 3px rgba(0,0,0,0.2);">Semester Grade Point Average (SGPA)</p>
           <h2 style="margin: 10px 0 0; font-size: 48px; color: #fff; font-weight: 700; text-shadow: 0 2px 5px rgba(0,0,0,0.3);">${data.sgpa.toFixed(2)}</h2>
         </div>
       </div>
-      
-      <style>
-        @keyframes float {
-          0% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-          100% { transform: translateY(0px); }
-        }
-      </style>
     `;
   } 
   // CGPA specific content
@@ -233,6 +227,7 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
         padding: 20px;
         border-radius: 8px;
         margin-bottom: 25px;
+        flex-grow: 1;
       ">
         <h2 style="margin-top: 0; margin-bottom: 15px; font-size: 18px; color: #C084FC;">Academic Performance Summary</h2>
         <table style="width: 100%; border-collapse: collapse;">
@@ -290,8 +285,6 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
           border-radius: 100px;
           text-align: center;
           box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-          transform: translateY(0);
-          animation: float 3s ease-in-out infinite;
         ">
           <p style="margin: 0; font-size: 16px; color: #fff; font-weight: 500; text-shadow: 0 1px 3px rgba(0,0,0,0.2);">Cumulative Grade Point Average (CGPA)</p>
           <h2 style="margin: 10px 0 0; font-size: 48px; color: #fff; font-weight: 700; text-shadow: 0 2px 5px rgba(0,0,0,0.3);">${(data.cgpa || 0).toFixed(2)}</h2>
@@ -328,21 +321,13 @@ const generateReportHTML = (data: ReportData, type: 'sgpa' | 'cgpa'): string => 
           <span>10.0</span>
         </div>
       </div>
-      
-      <style>
-        @keyframes float {
-          0% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-          100% { transform: translateY(0px); }
-        }
-      </style>
     `;
   }
   
   // Common footer
   html += `
       <div style="
-        margin-top: 40px;
+        margin-top: auto;
         padding-top: 20px;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
         text-align: center;
