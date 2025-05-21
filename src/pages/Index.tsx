@@ -15,8 +15,39 @@ const Index = () => {
   const [branch, setBranch] = useState('');
   const [semester, setSemester] = useState('');
   
+  // Background particle effect
+  const particleVariants = {
+    animate: {
+      y: [0, -10, 0],
+      transition: {
+        duration: 3,
+        repeat: Infinity,
+        repeatType: "reverse" as const
+      }
+    }
+  };
+  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-background/95">
+    <div className="min-h-screen bg-gradient-to-br from-background to-background/95 overflow-hidden relative">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden opacity-30 pointer-events-none">
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full bg-primary/20"
+            style={{
+              width: Math.random() * 80 + 10,
+              height: Math.random() * 80 + 10,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            variants={particleVariants}
+            animate="animate"
+            transition={{ delay: i * 0.2 }}
+          />
+        ))}
+      </div>
+      
       <Navbar />
       
       <div className="container px-4 py-8 mx-auto">
@@ -26,11 +57,20 @@ const Index = () => {
           transition={{ duration: 0.5 }}
           className="text-center mb-12"
         >
-          <h1 className="text-4xl md:text-5xl font-bold gradient-text animate-pulse-slow mb-2">
-            KIIT SGPA/CGPA Calculator
-          </h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Calculate your Semester Grade Point Average (SGPA) and Cumulative Grade Point Average (CGPA) with this advanced calculator. Generate beautiful reports to track your academic progress.
+          <div className="relative">
+            <h1 className="text-4xl md:text-5xl font-bold gradient-text mb-2 inline-block relative z-10">
+              KIIT SGPA/CGPA Calculator
+              <motion.div 
+                className="absolute -bottom-1 left-0 h-1 bg-gradient-to-r from-primary/80 to-accent/80"
+                initial={{ width: "0%" }}
+                animate={{ width: "100%" }}
+                transition={{ duration: 1, delay: 0.5 }}
+              />
+            </h1>
+          </div>
+          <p className="text-muted-foreground max-w-2xl mx-auto mt-4">
+            Calculate your Semester Grade Point Average (SGPA) and Cumulative Grade Point Average (CGPA) with this advanced calculator. 
+            Generate beautiful reports to track your academic progress.
           </p>
         </motion.div>
         
@@ -40,13 +80,13 @@ const Index = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="max-w-5xl mx-auto bg-secondary/10 p-0.5 rounded-lg glass-card mb-12"
         >
-          <div className="p-6">
+          <div className="backdrop-blur-xl p-6 rounded-lg">
             <Tabs defaultValue="sgpa" className="w-full">
               <TabsList className="grid grid-cols-2 mb-8">
-                <TabsTrigger value="sgpa" className="text-base">
+                <TabsTrigger value="sgpa" className="text-base font-medium">
                   SGPA Calculator
                 </TabsTrigger>
-                <TabsTrigger value="cgpa" className="text-base">
+                <TabsTrigger value="cgpa" className="text-base font-medium">
                   CGPA Calculator
                 </TabsTrigger>
               </TabsList>
@@ -64,7 +104,7 @@ const Index = () => {
                     />
                   </div>
                   <div className="lg:col-span-1">
-                    <div className="sticky top-4">
+                    <div className="sticky top-4 space-y-4">
                       <ResultsVisualizer 
                         sgpa={calculatedSGPA}
                         cgpa={calculatedCGPA}
@@ -87,7 +127,7 @@ const Index = () => {
                     />
                   </div>
                   <div className="lg:col-span-1">
-                    <div className="sticky top-4">
+                    <div className="sticky top-4 space-y-4">
                       <ResultsVisualizer 
                         sgpa={calculatedSGPA}
                         cgpa={calculatedCGPA}
@@ -107,7 +147,7 @@ const Index = () => {
           transition={{ duration: 0.5, delay: 0.4 }}
           className="text-center text-sm text-muted-foreground mt-12"
         >
-          <p>© 2025 KIIT-CONNECT. All rights reserved.</p>
+          <p className="mb-1">© {new Date().getFullYear()} KIIT-CONNECT. All rights reserved.</p>
           <p>This calculator uses the official KIIT University grading system.</p>
         </motion.div>
       </div>
